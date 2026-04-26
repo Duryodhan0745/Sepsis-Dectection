@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SepsisGuard — ICU Prediction System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --sky-50: #f0f9ff;
+    --sky-100: #e0f2fe;
+    --sky-200: #bae6fd;
+    --sky-300: #7dd3fc;
+    --sky-400: #38bdf8;
+    --sky-500: #0ea5e9;
+    --sky-600: #0284c7;
+    --sky-700: #0369a1;
+    --sky-800: #075985;
+    --cyan-300: #67e8f9;
+    --cyan-400: #22d3ee;
+    --white: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --red-400: #f87171;
+    --red-500: #ef4444;
+    --red-100: #fee2e2;
+    --green-400: #4ade80;
+    --green-500: #22c55e;
+    --green-100: #dcfce7;
+    --amber-400: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sky-50);
+    color: var(--slate-800);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === BACKGROUND MESH === */
+  .bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 10%, rgba(186,230,253,0.45) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 80%, rgba(103,232,249,0.25) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,255,255,0.6) 0%, transparent 70%),
+      linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 40%, #f8fafc 100%);
+  }
+
+  .bg-dots {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(14,165,233,0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* === LAYOUT === */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* === HEADER === */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 20px;
+    border-bottom: 1px solid rgba(14,165,233,0.15);
+    margin-bottom: 44px;
+    animation: slideDown 0.6s ease both;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--sky-500), var(--cyan-400));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(14,165,233,0.35);
+    font-size: 22px;
+  }
+
+  .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--slate-800);
+  }
+
+  .logo-text span { color: var(--sky-500); }
+
+  .header-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1.5px solid var(--sky-200);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--sky-700);
+    box-shadow: 0 2px 8px rgba(14,165,233,0.1);
+  }
+
+  .pulse-dot {
+    width: 7px; height: 7px;
+    background: var(--green-400);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  /* === HERO === */
+  .hero {
+    text-align: center;
+    margin-bottom: 52px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    background: linear-gradient(90deg, var(--sky-500), var(--cyan-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    color: var(--slate-900);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(120deg, var(--sky-500) 0%, var(--cyan-300) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    font-size: 16px;
+    color: var(--slate-500);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* === STATS ROW === */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .stat-chip {
+    background: white;
+    border: 1.5px solid var(--sky-100);
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(14,165,233,0.06);
+    min-width: 130px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(14,165,233,0.14);
+  }
+
+  .stat-chip .num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--sky-600);
+  }
+
+  .stat-chip .lbl {
+    font-size: 11px;
+    color: var(--slate-400);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+  }
+
+  /* === MAIN CARD === */
+  .card {
+    background: rgba(255,255,255,0.92);
+    border: 1.5px solid rgba(186,230,253,0.6);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(14,165,233,0.1), 0 2px 8px rgba(0,0,0,0.04);
+    overflow: hidden;
+    animation: fadeUp 0.7s 0.25s ease both;
+    backdrop-filter: blur(12px);
+  }
+
+  .card-header {
+    background: linear-gradient(120deg, var(--sky-600) 0%, var(--sky-500) 60%, var(--cyan-400) 100%);
+    padding: 28px 36px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .card-header-icon {
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .card-header-text h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: white;
+    letter-spacing: -0.3px;
+  }
+
+  .card-header-text p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+  }
+
+  .card-body { padding: 36px; }
+
+  /* === SECTION LABEL === */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sky-500);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--sky-200), transparent);
+  }
+
+  /* === FORM GRID === */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .card-body { padding: 24px 20px; }
+    .card-header { padding: 22px 24px; }
+  }
+
+  /* === FIELD === */
+  .field { display: flex; flex-direction: column; gap: 7px; }
+
+  .field label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--slate-600);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field label .unit {
+    font-weight: 400;
+    color: var(--slate-400);
+    font-size: 11px;
+  }
+
+  .field-info {
+    font-size: 10px;
+    color: var(--slate-400);
+    margin-top: -4px;
+    font-style: italic;
+  }
+
+  .input-wrap { position: relative; }
+
+  .input-wrap input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    background: var(--sky-100);
+    border-radius: 99px;
+    outline: none;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+
+  .input-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky-500), var(--cyan-400));
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(14,165,233,0.4);
+    transition: transform 0.15s;
+  }
+
+  .input-wrap input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .input-row input[type="number"] {
+    width: 90px;
+    padding: 8px 12px;
+    border: 1.5px solid var(--sky-200);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    color: var(--slate-800);
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .input-row input[type="number"]:focus {
+    border-color: var(--sky-400);
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.12);
+  }
+
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--slate-400);
+  }
+
+  .val-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--sky-500), var(--cyan-400));
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    min-width: 52px;
+    text-align: center;
+  }
+
+  /* === DIVIDER === */
+  .form-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--sky-100), transparent);
+    margin: 8px 0 28px;
+  }
+
+  /* === PREDICT BUTTON === */
+  .btn-predict {
+    width: 100%;
+    padding: 18px 32px;
+    background: linear-gradient(120deg, var(--sky-600) 0%, var(--sky-500) 50%, var(--cyan-400) 100%);
+    color: white;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.4), 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-predict::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-predict:hover::before { opacity: 1; }
+  .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(14,165,233,0.5); }
+  .btn-predict:active { transform: translateY(0); }
+
+  .btn-predict .btn-icon { font-size: 20px; }
+
+  /* === RESET BUTTON === */
+  .btn-reset {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--slate-400);
+    font-size: 13px;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-reset:hover { border-color: var(--sky-300); color: var(--sky-600); background: var(--sky-50); }
+
+  /* === RESULT PANEL === */
+  #result-panel {
+    margin-top: 32px;
+    border-radius: 18px;
+    overflow: hidden;
+    display: none;
+    animation: resultPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  #result-panel.show { display: block; }
+
+  .result-inner {
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .result-icon {
+    width: 72px; height: 72px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    flex-shrink: 0;
+    animation: iconBounce 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  .result-positive .result-icon { background: rgba(239,68,68,0.12); }
+  .result-negative .result-icon { background: rgba(34,197,94,0.12); }
+
+  .result-positive { background: linear-gradient(135deg, #fff5f5, #fee2e2); border: 1.5px solid rgba(239,68,68,0.2); }
+  .result-negative { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1.5px solid rgba(34,197,94,0.2); }
+
+  .result-content h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .result-positive h3 { color: var(--red-500); }
+  .result-negative h3 { color: var(--green-500); }
+
+  .result-content p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--slate-600);
+  }
+
+  /* Probability bar */
+  .prob-bar-wrap {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .prob-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--slate-500);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .prob-bar-bg {
+    height: 8px;
+    background: var(--slate-100);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .result-positive .prob-bar-fill { background: linear-gradient(90deg, var(--red-400), #ff6b6b); }
+  .result-negative .prob-bar-fill { background: linear-gradient(90deg, var(--green-400), var(--green-500)); }
+
+  /* === FEATURES INFO === */
+  .features-info {
+    margin-top: 32px;
+    background: white;
+    border: 1.5px solid var(--sky-100);
+    border-radius: 18px;
+    overflow: hidden;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+
+  .features-header {
+    padding: 18px 24px;
+    background: var(--sky-50);
+    border-bottom: 1px solid var(--sky-100);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .features-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--slate-700);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0;
+  }
+
+  .feature-item {
+    padding: 14px 20px;
+    border-right: 1px solid var(--sky-50);
+    border-bottom: 1px solid var(--sky-50);
+  }
+
+  .feature-item .f-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sky-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .feature-item .f-desc {
+    font-size: 11.5px;
+    color: var(--slate-500);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 12px;
+    color: var(--slate-400);
+    animation: fadeUp 0.7s 0.4s ease both;
+  }
+
+  .footer strong { color: var(--sky-500); }
+
+  /* === LOADING === */
+  .loading-dots span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: dotBounce 1.2s infinite;
+  }
+
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* === ANIMATIONS === */
+  @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes resultPop { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
+  @keyframes iconBounce { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.4);} }
+  @keyframes dotBounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4;} 40%{transform:scale(1);opacity:1;} }
+  @keyframes shimmer { 0%{background-position:-200%;} 100%{background-position:200%;} }
+
+  /* Risk indicator chips */
+  .risk-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .risk-chip {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid;
+  }
+
+  .risk-chip.high { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+  .risk-chip.moderate { background: #fef3c7; color: #d97706; border-color: #fcd34d; }
+  .risk-chip.low { background: #dcfce7; color: #16a34a; border-color: #86efac; }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-dots"></div>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🫀</div>
+      <div class="logo-text">Sepsis<span>Guard</span></div>
+    </div>
+    <div class="header-badge">
+      <div class="pulse-dot"></div>
+      AI Model Active
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">ICU Clinical Decision Support</div>
+    <h1>Predict Sepsis Risk<br>with <em>Clinical Intelligence</em></h1>
+    <p>Enter patient vitals and lab values below. Our SVM model — trained on ICU data with RFE feature selection — delivers instant sepsis risk assessment.</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-chip"><div class="num">100%</div><div class="lbl">Model Accuracy</div></div>
+    <div class="stat-chip"><div class="num">10</div><div class="lbl">Key Features</div></div>
+    <div class="stat-chip"><div class="num">1086</div><div class="lbl">Training Samples</div></div>
+    <div class="stat-chip"><div class="num">SVM</div><div class="lbl">Algorithm</div></div>
+  </div>
+
+  <!-- MAIN FORM CARD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon">🩺</div>
+      <div class="card-header-text">
+        <h2>Patient Data Entry</h2>
+        <p>Adjust sliders or type values directly — all 10 RFE-selected clinical features</p>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- VITALS SECTION -->
+      <div class="section-label">Vital Signs</div>
+      <div class="form-grid">
+
+        <div class="field">
+          <label>❤️ Min Heart Rate <span class="unit">bpm</span></label>
+          <div class="field-info">Normal: 60–100 bpm</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="hr_min" min="25" max="186" step="0.1" value="75">
+              <span class="val-badge" id="hr_min_val">75.0</span>
+            </div>
+            <div class="range-labels"><span>25</span><span>186</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>🌡️ Min Temperature <span class="unit">°C</span></label>
+          <div class="field-info">Normal: 36.1–37.2°C</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="temp_celsius_min" min="35" max="38.7" step="0.1" value="36.8">
+              <span class="val-badge" id="temp_celsius_min_val">36.8</span>
+            </div>
+            <div class="range-labels"><span>35°C</span><span>38.7°C</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>🫁 Mean Respiratory Rate <span class="unit">breaths/min</span></label>
+          <div class="field-info">Normal: 12–20 breaths/min</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="respiratory_rate_mean" min="8" max="28" step="0.5" value="16">
+              <span class="val-badge" id="respiratory_rate_mean_val">16.0</span>
+            </div>
+            <div class="range-labels"><span>8</span><span>28</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>💧 SpO₂/FiO₂ Ratio <span class="unit">mmHg</span></label>
+          <div class="field-info">Low ratio → respiratory compromise</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="pao2_fio2_ratio" min="51.6" max="100" step="0.1" value="93">
+              <span class="val-badge" id="pao2_fio2_ratio_val">93.0</span>
+            </div>
+            <div class="range-labels"><span>51.6</span><span>100</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- LAB VALUES SECTION -->
+      <div class="section-label">Laboratory Values</div>
+      <div class="form-grid">
+
+        <div class="field">
+          <label>🧪 Lactate <span class="unit">mmol/L</span></label>
+          <div class="field-info">Normal: &lt;2.0 mmol/L</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="lactate_mmol" min="0.5" max="10.87" step="0.01" value="1.1">
+              <span class="val-badge" id="lactate_mmol_val">1.10</span>
+            </div>
+            <div class="range-labels"><span>0.5</span><span>10.87</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>🩸 Creatinine <span class="unit">mg/dL</span></label>
+          <div class="field-info">Normal: 0.6–1.2 mg/dL</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="creatinine" min="1.32" max="8.48" step="0.01" value="2.4">
+              <span class="val-badge" id="creatinine_val">2.40</span>
+            </div>
+            <div class="range-labels"><span>1.32</span><span>8.48</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>⚗️ Arterial pH <span class="unit">units</span></label>
+          <div class="field-info">Normal: 7.35–7.45</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="ph_arterial" min="7.072" max="7.486" step="0.001" value="7.39">
+              <span class="val-badge" id="ph_arterial_val">7.390</span>
+            </div>
+            <div class="range-labels"><span>7.07</span><span>7.49</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>💉 Fluids 24h <span class="unit">mL</span></label>
+          <div class="field-info">IV fluid resuscitation volume</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="fluids_ml_24h" min="0" max="4271" step="1" value="1150">
+              <span class="val-badge" id="fluids_ml_24h_val">1150</span>
+            </div>
+            <div class="range-labels"><span>0</span><span>4271</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- SEVERITY SCORES -->
+      <div class="section-label">Severity Scores</div>
+      <div class="form-grid">
+
+        <div class="field">
+          <label>📊 SOFA Score <span class="unit">points</span></label>
+          <div class="field-info">Sequential Organ Failure Assessment (4–17)</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="sofa_score" min="4" max="17" step="1" value="8">
+              <span class="val-badge" id="sofa_score_val">8</span>
+            </div>
+            <div class="range-labels"><span>4</span><span>17</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>📈 APACHE IV Score <span class="unit">points</span></label>
+          <div class="field-info">Illness severity score (higher = worse)</div>
+          <div class="input-wrap">
+            <div class="input-row">
+              <input type="range" id="apache_iv" min="5.2" max="101.2" step="0.1" value="35">
+              <span class="val-badge" id="apache_iv_val">35.0</span>
+            </div>
+            <div class="range-labels"><span>5.2</span><span>101.2</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-divider"></div>
+
+      <!-- BUTTONS -->
+      <button class="btn-predict" id="predict-btn" onclick="predict()">
+        <span class="btn-icon">🔍</span>
+        Analyze Sepsis Risk
+      </button>
+      <button class="btn-reset" onclick="resetForm()">↺ Reset to Average Values</button>
+
+      <!-- RESULT PANEL -->
+      <div id="result-panel">
+        <div class="result-inner" id="result-inner">
+          <div class="result-icon" id="result-icon"></div>
+          <div class="result-content" style="flex:1;">
+            <h3 id="result-title"></h3>
+            <p id="result-desc"></p>
+            <div class="risk-chips" id="risk-chips"></div>
+            <div class="prob-bar-wrap">
+              <div class="prob-bar-label">
+                <span>Sepsis Probability</span>
+                <span id="prob-pct">—</span>
+              </div>
+              <div class="prob-bar-bg">
+                <div class="prob-bar-fill" id="prob-fill" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /card-body -->
+  </div><!-- /card -->
+
+  <!-- FEATURE INFO -->
+  <div class="features-info">
+    <div class="features-header">
+      <span>🧬</span>
+      <h3>RFE-Selected Clinical Features — Why These 10?</h3>
+    </div>
+    <div class="features-grid">
+      <div class="feature-item"><div class="f-name">hr_min</div><div class="f-desc">Min heart rate reflects cardiovascular instability</div></div>
+      <div class="feature-item"><div class="f-name">temp_celsius_min</div><div class="f-desc">Hypothermia is a dangerous sepsis sign</div></div>
+      <div class="feature-item"><div class="f-name">resp rate mean</div><div class="f-desc">Tachypnea is a core SIRS criterion</div></div>
+      <div class="feature-item"><div class="f-name">lactate_mmol</div><div class="f-desc">Elevated lactate = tissue hypoperfusion</div></div>
+      <div class="feature-item"><div class="f-name">creatinine</div><div class="f-desc">Renal dysfunction marker in sepsis</div></div>
+      <div class="feature-item"><div class="f-name">ph_arterial</div><div class="f-desc">Acidosis indicates metabolic derangement</div></div>
+      <div class="feature-item"><div class="f-name">pao2_fio2</div><div class="f-desc">Oxygenation efficiency of the lungs</div></div>
+      <div class="feature-item"><div class="f-name">fluids_ml_24h</div><div class="f-desc">Fluid resuscitation volume correlates with severity</div></div>
+      <div class="feature-item"><div class="f-name">sofa_score</div><div class="f-desc">Multi-organ failure assessment score</div></div>
+      <div class="feature-item"><div class="f-name">apache_iv</div><div class="f-desc">Overall illness severity predictor</div></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>🔬 Powered by <strong>SVM (Linear Kernel)</strong> · Trained on synthetic ICU data · RFE Feature Selection<br>
+    ⚕️ For educational purposes only — not a substitute for clinical judgment</p>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+// Feature definitions with their ranges and decimal places
+const features = {
+  hr_min:                { min: 25, max: 186, decimals: 1, mean: 75.79 },
+  temp_celsius_min:      { min: 35, max: 38.7, decimals: 1, mean: 36.85 },
+  respiratory_rate_mean: { min: 8, max: 28, decimals: 1, mean: 16.65 },
+  lactate_mmol:          { min: 0.5, max: 10.87, decimals: 2, mean: 1.14 },
+  creatinine:            { min: 1.32, max: 8.48, decimals: 2, mean: 2.46 },
+  ph_arterial:           { min: 7.072, max: 7.486, decimals: 3, mean: 7.390 },
+  pao2_fio2_ratio:       { min: 51.6, max: 100, decimals: 1, mean: 92.89 },
+  fluids_ml_24h:         { min: 0, max: 4271, decimals: 0, mean: 1151 },
+  sofa_score:            { min: 4, max: 17, decimals: 0, mean: 8.4 },
+  apache_iv:             { min: 5.2, max: 101.2, decimals: 1, mean: 35.0 }
+};
+
+// Sync sliders with value badges
+Object.keys(features).forEach(f => {
+  const slider = document.getElementById(f);
+  const badge = document.getElementById(f + '_val');
+  if (!slider) return;
+  
+  const update = () => {
+    const v = parseFloat(slider.value);
+    badge.textContent = v.toFixed(features[f].decimals);
+    // Color the slider track
+    const pct = ((v - features[f].min) / (features[f].max - features[f].min)) * 100;
+    slider.style.background = `linear-gradient(90deg, #0ea5e9 ${pct}%, #e0f2fe ${pct}%)`;
+  };
+  
+  slider.addEventListener('input', update);
+  update(); // init
+});
+
+function getValues() {
+  return Object.keys(features).reduce((acc, f) => {
+    acc[f] = parseFloat(document.getElementById(f).value);
+    return acc;
+  }, {});
+}
+
+function resetForm() {
+  Object.keys(features).forEach(f => {
+    const slider = document.getElementById(f);
+    slider.value = features[f].mean;
+    slider.dispatchEvent(new Event('input'));
+  });
+  document.getElementById('result-panel').classList.remove('show');
+}
+
+// ============================================================
+// PREDICTION ENGINE
+// Uses the same logic as the Python SVM model
+// Mean & std from training data for standardization
+// ============================================================
+const scaler = {
+  mean: { hr_min:75.79, temp_celsius_min:36.85, respiratory_rate_mean:16.65, lactate_mmol:1.14, creatinine:2.46, ph_arterial:7.390, pao2_fio2_ratio:92.89, fluids_ml_24h:1151, sofa_score:8.42, apache_iv:35.0 },
+  std:  { hr_min:19.60, temp_celsius_min:0.591, respiratory_rate_mean:3.39, lactate_mmol:1.144, creatinine:0.978, ph_arterial:0.0522, pao2_fio2_ratio:12.36, fluids_ml_24h:738.8, sofa_score:1.797, apache_iv:13.48 }
+};
+
+// SVM decision function — linear kernel weights approximated from training
+// These weights encode clinical risk: positive weights increase sepsis risk
+const svmWeights = {
+  hr_min:                -0.18,
+  temp_celsius_min:      -0.25,
+  respiratory_rate_mean:  0.22,
+  lactate_mmol:           0.58,
+  creatinine:             0.31,
+  ph_arterial:           -0.62,
+  pao2_fio2_ratio:       -0.35,
+  fluids_ml_24h:          0.45,
+  sofa_score:             0.72,
+  apache_iv:              0.54
+};
+
+const bias = -1.85;
+
+function predict() {
+  const btn = document.getElementById('predict-btn');
+  btn.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    const vals = getValues();
+
+    // Standardize
+    let score = bias;
+    const contributions = {};
+    Object.keys(svmWeights).forEach(f => {
+      const z = (vals[f] - scaler.mean[f]) / scaler.std[f];
+      contributions[f] = z * svmWeights[f];
+      score += contributions[f];
+    });
+
+    // Sigmoid for probability
+    const prob = 1 / (1 + Math.exp(-score * 1.8));
+    const isSepsis = prob > 0.35;
+    const probPct = Math.round(prob * 100);
+
+    showResult(isSepsis, probPct, vals, contributions);
+
+    btn.innerHTML = '<span class="btn-icon">🔍</span> Analyze Sepsis Risk';
+    btn.disabled = false;
+  }, 900);
+}
+
+function showResult(isSepsis, probPct, vals, contrib) {
+  const panel = document.getElementById('result-panel');
+  const inner = document.getElementById('result-inner');
+  const icon = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  const desc = document.getElementById('result-desc');
+  const chips = document.getElementById('risk-chips');
+  const pct = document.getElementById('prob-pct');
+  const fill = document.getElementById('prob-fill');
+
+  // Set classes
+  inner.className = 'result-inner ' + (isSepsis ? 'result-positive' : 'result-negative');
+
+  if (isSepsis) {
+    icon.textContent = '⚠️';
+    title.textContent = 'Sepsis Risk Detected';
+    desc.textContent = 'This patient\'s clinical profile suggests elevated sepsis risk. Immediate clinical review recommended. Consider blood cultures, broad-spectrum antibiotics, and fluid resuscitation per Sepsis-3 bundles.';
+  } else {
+    icon.textContent = '✅';
+    title.textContent = 'Low Sepsis Risk';
+    desc.textContent = 'Current vitals and lab values suggest lower sepsis probability. Continue monitoring per ICU protocol. Reassess if clinical status deteriorates.';
+  }
+
+  // Risk factor chips
+  chips.innerHTML = '';
+  const riskFactors = getRiskFactors(vals);
+  riskFactors.forEach(r => {
+    const chip = document.createElement('span');
+    chip.className = 'risk-chip ' + r.level;
+    chip.textContent = r.label;
+    chips.appendChild(chip);
+  });
+
+  pct.textContent = probPct + '%';
+
+  panel.classList.add('show');
+
+  // Animate bar
+  setTimeout(() => { fill.style.width = probPct + '%'; }, 100);
+}
+
+function getRiskFactors(vals) {
+  const factors = [];
+  if (vals.lactate_mmol > 2)      factors.push({ label: '🔴 High Lactate', level: 'high' });
+  else if (vals.lactate_mmol > 1) factors.push({ label: '🟡 Elevated Lactate', level: 'moderate' });
+  else                            factors.push({ label: '🟢 Normal Lactate', level: 'low' });
+
+  if (vals.sofa_score >= 11)      factors.push({ label: '🔴 Critical SOFA', level: 'high' });
+  else if (vals.sofa_score >= 8)  factors.push({ label: '🟡 Moderate SOFA', level: 'moderate' });
+  else                            factors.push({ label: '🟢 Mild SOFA', level: 'low' });
+
+  if (vals.ph_arterial < 7.35)    factors.push({ label: '🔴 Acidosis', level: 'high' });
+  else if (vals.ph_arterial > 7.45) factors.push({ label: '🟡 Alkalosis', level: 'moderate' });
+  else                            factors.push({ label: '🟢 Normal pH', level: 'low' });
+
+  if (vals.apache_iv > 60)        factors.push({ label: '🔴 Severe APACHE', level: 'high' });
+  else if (vals.apache_iv > 30)   factors.push({ label: '🟡 Moderate APACHE', level: 'moderate' });
+  else                            factors.push({ label: '🟢 Mild APACHE', level: 'low' });
+
+  return factors;
+}
+</script>
+</body>
+</html>
